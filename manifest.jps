@@ -1,0 +1,56 @@
+---
+type: install
+version: 1.1
+id: neo4j-enterprise
+baseUrl: https://raw.githubusercontent.com/jelastic-jps/neo4j-enterprise/master/addons
+description:
+  text: /text/description.md
+  short: Neo4J Enterprise
+categories:
+  - apps/popular
+  - apps/clusters
+  - apps/dev-and-admin-tools
+  - apps/microservices
+
+logo: ../images/logo-neo4j.png
+name: Neo4j Enteprise
+
+globals: 
+  password: ${fn.password(20)}
+  discoveryport: 5000
+
+settings:
+
+settings:
+  fields:
+  - type: spinner
+    name: cores
+    caption: Cores
+    min: 3
+    max: 5
+    default: ${settings.cores}
+  - type: spinner
+    name: replicas
+    caption: Replicas
+    min: 1
+    max: 5
+    default: ${settings.replicas}
+        
+nodes:
+- count: ${settings.cores}
+  cloudlets: 32
+  image: neo4j/3.3.2-enterprise
+  nodeGroup: cp
+  displayName: CoreNode
+  extip: false
+  env:
+    NEO4J_dbms_mode: CORE
+    NEO4J_causal__clustering_discovery__type: DNS
+    NEO4J_ACCEPT_LICENSE_AGREEMENT: yes
+    NEO4J_dbms_security_auth__enabled: false
+    NEO4J_causal__clustering_initial__discovery__members: ${env.envName}
+    NEO4J_causal__clustering_initial__discovery__members: node-${this.nodeId}-${env.domain}:${globals.discoveryport}
+    NEO4J_AUTH: neo4j/abcABC123
+    
+success:
+  text: /text/engine-success.md
