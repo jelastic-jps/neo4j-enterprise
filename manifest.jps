@@ -15,12 +15,28 @@ categories:
 logo: ../images/logo-neo4j.png
 name: Neo4j Enteprise
 
-globals: 
+globals:
   password: ${fn.password(20)}
   discoveryport: 5000
 
-settings:
 
+onInstall:
+  - adjust-env-ars
+  - add-to-rc-conf
+  - run-neo4-cluster
+
+
+actions:
+  adjust-env-ars:
+    api [cp]: env.control.AddContainerEnvVars 
+    vars:
+      NEO4J_causal__clustering_initial__discovery__members: ${env.domain}:${globals.discoveryport}
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+  
+  add-to-rc-conf:
+    cmd [cp]:  rc-update add jelinit default && rc-service jelinit start  
+
+         
 settings:
   fields:
   - type: spinner
@@ -35,22 +51,21 @@ settings:
     min: 1
     max: 5
     default: ${settings.replicas}
-        
+
 nodes:
 - count: ${settings.cores}
   cloudlets: 32
-  image: neo4j/3.3.2-enterprise
+  image: "neo4j:3.3.2-enterprise"
   nodeGroup: cp
   displayName: CoreNode
   extip: false
+  startServiceOnCreation: false
   env:
     NEO4J_dbms_mode: CORE
     NEO4J_causal__clustering_discovery__type: DNS
-    NEO4J_ACCEPT_LICENSE_AGREEMENT: yes
+    NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
     NEO4J_dbms_security_auth__enabled: false
-    NEO4J_causal__clustering_initial__discovery__members: ${env.envName}
-    NEO4J_causal__clustering_initial__discovery__members: node-${this.nodeId}-${env.domain}:${globals.discoveryport}
     NEO4J_AUTH: neo4j/abcABC123
-    
+
 success:
-  text: /text/engine-success.md
+  text: /text/success.md
