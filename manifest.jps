@@ -2,7 +2,7 @@
 type: install
 version: 1.1
 id: neo4j-enterprise
-baseUrl: https://raw.githubusercontent.com/jelastic-jps/neo4j-enterprise/master/addons
+baseUrl: https://raw.githubusercontent.com/jelastic-jps/neo4j-enterprise/master
 description:
   text: /text/description.md
   short: Neo4J Enterprise
