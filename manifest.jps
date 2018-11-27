@@ -22,21 +22,8 @@ globals:
 
 onInstall:
   - adjust-env-ars
-  - add-to-rc-conf
-  - run-neo4-cluster
+  - enable-autostart
 
-
-actions:
-  adjust-env-ars:
-    api [cp]: env.control.AddContainerEnvVars 
-    vars:
-      NEO4J_causal__clustering_initial__discovery__members: ${env.domain}:${globals.discoveryport}
-      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
-  
-  add-to-rc-conf:
-    cmd [cp]:  rc-update add jelinit default && rc-service jelinit start  
-
-         
 settings:
   fields:
   - type: spinner
@@ -67,5 +54,21 @@ nodes:
     NEO4J_dbms_security_auth__enabled: false
     NEO4J_AUTH: neo4j/abcABC123
 
+actions:
+  adjust-env-ars:
+    api [cp]: env.control.AddContainerEnvVars 
+    vars:
+      NEO4J_causal__clustering_initial__discovery__members: ${env.domain}:${globals.discoveryport}
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+  
+  enable-autostart:
+    cmd [cp]: |-  
+       /sbin/rc-update add jelinit default
+       /sbin/rc-service jelinit start
+
+  testcmd:
+    cmd [cp]: |-
+       echo ok
+
 success:
-  text: /text/success.md
+  text: /text/engine-success.md
