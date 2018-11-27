@@ -22,8 +22,11 @@ globals:
 
 onInstall:
   - adjust-env-ars
-  - enable-autostart
+  - devops-stuff
 
+onUpdate:
+  - testcmd
+         
 settings:
   fields:
   - type: spinner
@@ -52,7 +55,7 @@ nodes:
     NEO4J_causal__clustering_discovery__type: DNS
     NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
     NEO4J_dbms_security_auth__enabled: false
-    NEO4J_AUTH: neo4j/abcABC123
+    NEO4J_AUTH: neo4j/${globals.password}
 
 actions:
   adjust-env-ars:
@@ -61,14 +64,22 @@ actions:
       NEO4J_causal__clustering_initial__discovery__members: ${env.domain}:${globals.discoveryport}
       NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
   
-  enable-autostart:
+  devops-stuff:
     cmd [cp]: |-  
        /sbin/rc-update add jelinit default
+       /sbin/iptables -I PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-ports 7474
+       /sbin/service iptables save
+       /usr/bin/sed -i 's/7687/4848/g' /docker-entrypoint.sh
        /sbin/rc-service jelinit start
-
+       /var/lib/neo4j/bin/neo4j-admin set-initial-password ${globals.password}
+       
   testcmd:
     cmd [cp]: |-
        echo ok
 
-success:
-  text: /text/engine-success.md
+success: |
+   [Neo4JBrowser URL](http://${env.domain})   
+   User:  
+   ```neo4j```  
+   Password:  
+   ```${globals.password}``` 
