@@ -12,13 +12,13 @@ categories:
   - apps/dev-and-admin-tools
   - apps/microservices
 
-logo: ../images/logo-neo4j.png
+logo: /images/neo4j-logo.png
 name: Neo4j Enteprise
+skipNodeEmails: true
 
 globals:
   password: ${fn.password(20)}
   discoveryport: 5000
-
 
 onInstall:
   - adjust-env-ars
@@ -35,6 +35,7 @@ settings:
     min: 3
     max: 5
     default: ${settings.cores}
+    
   - type: spinner
     name: replicas
     caption: Replicas
@@ -47,8 +48,8 @@ nodes:
   cloudlets: 32
   image: "neo4j:3.3.2-enterprise"
   nodeGroup: cp
-  displayName: CoreNode
-  extip: false
+  displayName: Core
+  extip: true
   startServiceOnCreation: false
   env:
     JELASTIC_EXPOSE: 7474
@@ -57,30 +58,49 @@ nodes:
     NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
     NEO4J_dbms_security_auth__enabled: false
     NEO4J_AUTH: neo4j/${globals.password}
+    
+- count: ${settings.replicas}
+  cloudlets: 32
+  image: "neo4j:3.3.2-enterprise"
+  nodeGroup: replicas
+  displayName: Replica
+  extip: false
+  startServiceOnCreation: false
+  env:
+    JELASTIC_EXPOSE: 7474
+    NEO4J_dbms_mode: READ_REPLICA
+    NEO4J_causal__clustering_discovery__type: DNS
+    NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+    NEO4J_dbms_security_auth__enabled: false
+    NEO4J_AUTH: neo4j/${globals.password}
 
 actions:
   adjust-env-ars:
-    api [cp]: env.control.AddContainerEnvVars 
+    api [cp,replicas]: env.control.AddContainerEnvVars 
     vars:
       NEO4J_causal__clustering_initial__discovery__members: ${env.domain}:${globals.discoveryport}
       NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
   
   devops-stuff:
-    cmd [cp]: |-  
+    cmd[cp]: |-  
        /sbin/rc-update add jelinit default
        /sbin/service iptables save
        /usr/bin/sed -i 's/7687/4848/g' /docker-entrypoint.sh
        /sbin/rc-service jelinit start
        #while $(! nc -vz localhost 7474) ;do sleep 1s; done
        /var/lib/neo4j/bin/neo4j-admin set-initial-password ${globals.password}
+    cmd[replicas]: |-  
+       /sbin/rc-update add jelinit default
+       /sbin/service iptables save
+       /usr/bin/sed -i 's/7687/4848/g' /docker-entrypoint.sh
+       /sbin/rc-service jelinit start
        
-  testcmd:
-    cmd [cp]: |-
-       echo ok
+  add-endpoint:
+    api: env.control.AddEndpoint
+    nodeId: ${nodes.cp.master.id}
+    privatePort: 4848
+    protocol: TCP
+    name: Bolt
 
-success: |
-   [Neo4JBrowser URL](http://${env.domain})   
-   User:  
-   ```neo4j```  
-   Password:  
-   ```${globals.password}``` 
+success: /text/success.md
+  
