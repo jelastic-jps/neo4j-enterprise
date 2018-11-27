@@ -5,7 +5,6 @@ id: neo4j-enterprise
 baseUrl: https://raw.githubusercontent.com/jelastic-jps/neo4j-enterprise/master
 description:
   text: /text/description.md
-  short: Neo4J Enterprise
 categories:
   - apps/popular
   - apps/clusters
@@ -13,7 +12,7 @@ categories:
   - apps/microservices
 
 logo: /images/neo4j-logo.png
-name: Neo4j Enteprise
+name: Neo4j Enterprise Cluster
 skipNodeEmails: true
 
 globals:
