@@ -20,12 +20,18 @@ globals:
   discoveryport: 5000
 
 onInstall:
-  - adjust-env-ars
+  - forEach(nodes.cp):
+      adjust-env-ars:
+         nodeId: ${@i.id}
+  - forEach(nodes.replicas):
+      adjust-env-ars:
+         nodeId: ${@i.id}
   - devops-stuff
+  - setAuth
 
 onUpdate:
   - testcmd
-         
+
 settings:
   fields:
   - type: spinner
@@ -34,7 +40,7 @@ settings:
     min: 3
     max: 5
     default: ${settings.cores}
-    
+
   - type: spinner
     name: replicas
     caption: Replicas
@@ -55,9 +61,9 @@ nodes:
     NEO4J_dbms_mode: CORE
     NEO4J_causal__clustering_discovery__type: DNS
     NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
-    NEO4J_dbms_security_auth__enabled: false
+    NEO4J_dbms_security_auth__enabled: true
     NEO4J_AUTH: neo4j/${globals.password}
-    
+
 - count: ${settings.replicas}
   cloudlets: 32
   image: "neo4j:3.3.2-enterprise"
@@ -75,31 +81,27 @@ nodes:
 
 actions:
   adjust-env-ars:
-    api [cp,replicas]: env.control.AddContainerEnvVars 
+    api[${this.nodeId}]: env.control.AddContainerEnvVars
     vars:
       NEO4J_causal__clustering_initial__discovery__members: ${env.domain}:${globals.discoveryport}
+      NEO4J_dbms_connectors_defaultAdvertisedAddress: node${this.nodeId}-${env.domain}
       NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
-  
+
+
   devops-stuff:
-    cmd[cp]: |-  
+    cmd[cp]: |-
        /sbin/rc-update add jelinit default
        /sbin/service iptables save
-       /usr/bin/sed -i 's/7687/4848/g' /docker-entrypoint.sh
        /sbin/rc-service jelinit start
        #while $(! nc -vz localhost 7474) ;do sleep 1s; done
-       /var/lib/neo4j/bin/neo4j-admin set-initial-password ${globals.password}
-    cmd[replicas]: |-  
+       echo
+    cmd[replicas]: |-
        /sbin/rc-update add jelinit default
        /sbin/service iptables save
-       /usr/bin/sed -i 's/7687/4848/g' /docker-entrypoint.sh
        /sbin/rc-service jelinit start
-       
-  add-endpoint:
-    api: env.control.AddEndpoint
-    nodeId: ${nodes.cp.master.id}
-    privatePort: 4848
-    protocol: TCP
-    name: Bolt
+
+  setAuth:
+    cmd[cp:master]: |-
+       /var/lib/neo4j/bin/neo4j-admin set-initial-password ${globals.password}
 
 success: /text/success.md
-  
