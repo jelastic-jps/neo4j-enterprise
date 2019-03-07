@@ -90,14 +90,14 @@ actions:
 
   devops-stuff:
     cmd[cp]: |-
-       wget get ${baseUrl}/addons/openrc-jelinit -O /etc/init.d/openrc-jelinit
+       wget ${baseUrl}/addons/openrc-jelinit -O /etc/init.d/openrc-jelinit
        chmod a+x /etc/init.d/openrc-jelinit ; rc-update add openrc-jelinit default
        /sbin/service iptables save
        /sbin/rc-service jelinit start
        #while $(! nc -vz localhost 7474) ;do sleep 1s; done
        echo
     cmd[replicas]: |-
-       wget get ${baseUrl}/addons/openrc-jelinit -O /etc/init.d/openrc-jelinit
+       wget ${baseUrl}/addons/openrc-jelinit -O /etc/init.d/openrc-jelinit
        chmod a+x /etc/init.d/openrc-jelinit ; rc-update add openrc-jelinit default
        /sbin/service iptables save
        /sbin/rc-service jelinit start
