@@ -1,0 +1,18 @@
+#!/sbin/runscript
+description="Jelastic Daemon"
+procname="jelinit"
+pidfile="/var/run/lock/jelinit.lock"
+stopsig="SIGTERM"
+
+start() {
+    ebegin "Starting mydaemon"
+        rm -f /var/run/lock/jelinit.lock
+        /bin/bash /etc/init.d/jelinit start
+    eend $?
+}
+
+stop() {
+    ebegin "Stopping mydaemon"
+        /etc/init.d/jelinit stop
+    eend $?
+}
