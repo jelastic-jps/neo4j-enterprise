@@ -51,7 +51,7 @@ settings:
 nodes:
 - count: ${settings.cores}
   cloudlets: 32
-  image: "neo4j:3.3.2-enterprise"
+  image: "neo4j:3.5-enterprise"
   nodeGroup: cp
   displayName: Core
   extip: true
@@ -66,7 +66,7 @@ nodes:
 
 - count: ${settings.replicas}
   cloudlets: 32
-  image: "neo4j:3.3.2-enterprise"
+  image: "neo4j:3.5-enterprise"
   nodeGroup: replicas
   displayName: Replica
   extip: false
@@ -90,17 +90,13 @@ actions:
 
   devops-stuff:
     cmd[cp]: |-
-       wget ${baseUrl}/addons/openrc-jelinit -O /etc/init.d/openrc-jelinit
-       chmod a+x /etc/init.d/openrc-jelinit ; rc-update add openrc-jelinit default
-       /sbin/service iptables save
-       /sbin/rc-service jelinit start
+       /usr/sbin/service iptables save
+       /usr/sbin/service jelinit start
        #while $(! nc -vz localhost 7474) ;do sleep 1s; done
        echo
     cmd[replicas]: |-
-       wget ${baseUrl}/addons/openrc-jelinit -O /etc/init.d/openrc-jelinit
-       chmod a+x /etc/init.d/openrc-jelinit ; rc-update add openrc-jelinit default
-       /sbin/service iptables save
-       /sbin/rc-service jelinit start
+       /usr/sbin/service iptables save
+       /usr/sbin/service jelinit start
 
   setAuth:
     cmd[cp:master]: |-
