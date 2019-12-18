@@ -90,6 +90,8 @@ actions:
 
   devops-stuff:
     cmd[cp]: |-
+       mkdir -p /var/lib/neo4j/plugins
+       wget ${baseUrl}/addons/apoc-3.5.0.6-all.jar -O /var/lib/neo4j/apoc-3.5.0.6-all.jar
        /usr/sbin/service iptables save
        /usr/sbin/service jelinit start
        #while $(! nc -vz localhost 7474) ;do sleep 1s; done
