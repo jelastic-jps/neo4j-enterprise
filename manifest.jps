@@ -101,7 +101,7 @@ actions:
        /usr/sbin/service jelinit start
 
   setAuth:
-    cmd[cp:master]: |-
+    cmd[${nodes.cp.master.id}]: |-
        /var/lib/neo4j/bin/neo4j-admin set-initial-password ${globals.password}
 
 success: /text/success.md
