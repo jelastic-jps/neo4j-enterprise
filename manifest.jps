@@ -99,7 +99,7 @@ actions:
       NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
  
   devops-stuff:
-    cmd[${this.nodeId}]:
+    cmd[${this.nodeId}]: |-
        mkdir -p /var/lib/neo4j/plugins
        wget ${baseUrl}/addons/apoc-3.5.0.14-all.jar -O /var/lib/neo4j/plugins/apoc-3.5.0.14-all.jar
        /usr/sbin/service iptables save
