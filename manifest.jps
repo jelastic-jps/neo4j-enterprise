@@ -101,7 +101,7 @@ actions:
   devops-stuff:
     cmd[${this.nodeId}]: |-
        mkdir -p /var/lib/neo4j/plugins
-       wget ${baseUrl}/addons/apoc-3.5.0.14-all.jar -O /var/lib/neo4j/plugins/apoc-3.5.0.14-all.jar
+       wget ${baseUrl}/addons/apoc-3.5.0.15-all.jar -O /var/lib/neo4j/plugins/apoc-3.5.0.15-all.jar
        /usr/sbin/service iptables save
        /usr/sbin/service jelinit start
        echo
