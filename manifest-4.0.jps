@@ -1,0 +1,123 @@
+---
+type: install
+version: 1.7
+id: neo4j-enterprise
+baseUrl: https://raw.githubusercontent.com/jelastic-jps/neo4j-enterprise/master
+description:
+  text: /text/description.md
+categories:
+  - apps/popular
+  - apps/clusters
+  - apps/dev-and-admin-tools
+  - apps/microservices
+
+logo: /images/neo4j-logo.png
+name: Neo4j Enterprise Cluster
+skipNodeEmails: true
+
+globals:
+  password: ${fn.password(20)}
+  discoveryport: 5000
+
+onInstall:
+  - forEach(nodes.cp):
+      adjust-env-ars:
+         nodeId: ${@i.id}
+         nodeIp: ${@i.intIP}
+      devops-stuff:
+         nodeId: ${@i.id}
+  - forEach(nodes.replicas):
+      adjust-env-ars:
+         nodeId: ${@i.id}
+      devops-stuff:
+         nodeId: ${@i.id} 
+  - setAuth
+
+onUpdate:
+  - testcmd
+
+onAfterScaleOut[cp]:
+  forEach(event.response.nodes):
+    devops-stuff:
+      id: ${@i.id}
+
+settings:
+  fields:
+  - type: spinner
+    name: cores
+    caption: Cores
+    min: 3
+    max: 5
+    default: ${settings.cores}
+
+  - type: spinner
+    name: replicas
+    caption: Replicas
+    min: 1
+    max: 5
+    default: ${settings.replicas}
+
+nodes:
+- count: ${settings.cores}
+  cloudlets: 32
+  image: "neo4j:4.0-enterprise"
+  nodeGroup: cp
+  displayName: Core
+  extip: true
+  startServiceOnCreation: false
+  env:
+    JELASTIC_EXPOSE: 7474
+    NEO4J_dbms_mode: CORE
+    NEO4J_causal__clustering_discovery__type: DNS
+    NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+    NEO4J_dbms_security_auth__enabled: true
+    NEO4J_AUTH: neo4j/${globals.password}
+  volumes:
+    - /var/lib/neo4j/plugins
+    - /data
+
+- count: ${settings.replicas}
+  cloudlets: 32
+  image: "neo4j:4.0-enterprise"
+  nodeGroup: replicas
+  displayName: Replica
+  extip: false
+  startServiceOnCreation: false
+  env:
+    JELASTIC_EXPOSE: 7474
+    NEO4J_dbms_mode: READ_REPLICA
+    NEO4J_causal__clustering_discovery__type: DNS
+    NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+    NEO4J_dbms_security_auth__enabled: false
+    NEO4J_AUTH: neo4j/${globals.password}
+
+actions:
+  adjust-env-ars:
+    api[${this.nodeId}]: env.control.AddContainerEnvVars
+    vars:
+      NEO4J_causal__clustering_initial__discovery__members: ${env.domain}:${globals.discoveryport}
+      NEO4J_dbms_default__advertised__address: "${this.nodeIp}"
+      NEO4J_dbms_allow__upgrade: "true"
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+      NEO4J_dbms_connector_http_listen__address: "0.0.0.0:7474"
+      NEO4J_dbms_connector_bolt_listen__address: "0.0.0.0:7687"
+      NEO4J_causal__clustering_discovery__advertised__address: "${this.nodeIp}:${globals.discoveryport}"
+      NEO4J_causal__clustering_raft__advertised__address: "${this.nodeIp}:7000"
+      NEO4J_causal__clustering_transaction__advertised__address: "${this.nodeIp}:6000"
+      NEO4J_dbms_connector_bolt_advertised__address: "${this.nodeIp}:7687"
+      NEO4J_dbms_connector_http_advertised__address: "${this.nodeIp}:7474"
+ 
+  devops-stuff:
+    cmd[${this.nodeId}]: |-
+       mkdir -p /var/lib/neo4j/plugins
+       wget ${baseUrl}/addons/apoc-4.0.0.18-all.jar -O /var/lib/neo4j/plugins/apoc-4.0.0.18-all.jar
+       service apache2 stop; apt remove -y apache2;
+       /usr/sbin/service iptables save
+       /usr/sbin/service jelinit start
+       echo
+
+  setAuth:
+    cmd[${nodes.cp.master.id}]: |-
+       /var/lib/neo4j/bin/neo4j-admin set-initial-password ${globals.password}
+
+success: /text/success.md
