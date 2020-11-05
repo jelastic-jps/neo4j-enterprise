@@ -26,6 +26,7 @@ onInstall:
          nodeIp: ${@i.intIP}
       devops-stuff:
          nodeId: ${@i.id}
+  - setLimits
   - forEach(nodes.replicas):
       adjust-env-ars:
          nodeId: ${@i.id}
@@ -115,6 +116,13 @@ actions:
        /usr/sbin/service iptables save
        /usr/sbin/service jelinit start
        echo
+       
+  setLimits:
+    cmd[cp, replicas]: |-
+       echo "root hard nofile 524290" >> /etc/security/limits.conf
+       echo "root soft nofile 524290" >> /etc/security/limits.conf
+       echo "@neo4j hard nofile 524290" >> /etc/security/limits.conf
+       echo "@neo4j soft nofile 524290" >> /etc/security/limits.conf
 
   setAuth:
     cmd[${nodes.cp.master.id}]: |-
