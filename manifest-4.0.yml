@@ -34,9 +34,6 @@ onInstall:
          nodeId: ${@i.id} 
   - setAuth
 
-onUpdate:
-  - testcmd
-
 onAfterScaleOut[cp]:
   forEach(event.response.nodes):
     devops-stuff:
@@ -115,7 +112,6 @@ actions:
        service apache2 stop; apt remove -y apache2;
        /usr/sbin/service iptables save
        /usr/sbin/service jelinit start
-       echo
        
   setLimits:
     cmd[cp, replicas]: |-
