@@ -31,6 +31,7 @@ onInstall:
   - forEach(nodes.replicas):
       adjust-env-ars:
          nodeId: ${@i.id}
+         nodeIp: ${@i.intIP}
       devops-stuff:
          nodeId: ${@i.id}
   - env.control.ExecDockerRunCmd[${nodes.replicas.join(id,)}]
